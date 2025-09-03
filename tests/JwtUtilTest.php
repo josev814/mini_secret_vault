@@ -1,15 +1,11 @@
 <?php
 use PHPUnit\Framework\TestCase;
-use TestMocks\Db as MockDb;
-
-require_once __DIR__ . '/../private/JwtUtil.php';
+use Vault\JwtUtil;
 
 class JwtUtilTest extends TestCase {
     private $pdo;
 
     protected function setUp(): void {
-        class_alias(MockDb::class, 'Db');
-        
         // in-memory SQLite for revocation table
         $this->pdo = new PDO('sqlite::memory:');
         $this->pdo->exec('CREATE TABLE revoked_jtis (jti TEXT PRIMARY KEY)');

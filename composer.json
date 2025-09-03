@@ -9,6 +9,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "TestMocks\\": "tests/mocks/",
             "Vault\\Tests\\": "tests/"
         }
     }

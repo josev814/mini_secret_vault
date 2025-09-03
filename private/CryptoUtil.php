@@ -1,6 +1,8 @@
 <?php
 // CryptoUtil.php - supports multiple KEKs
 
+namespace Vault; 
+
 class CryptoUtil {
     // parse MASTER_KEKS_JSON or fallback to single MASTER_KEK_B64
     private static function load_master_keks(): array {

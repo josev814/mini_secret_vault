@@ -1,4 +1,5 @@
 <?php
+namespace Vault;
 require_once 'Db.php';
 
 class RefreshTokenUtil {

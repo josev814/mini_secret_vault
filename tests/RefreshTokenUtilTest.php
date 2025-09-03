@@ -1,15 +1,11 @@
 <?php
 use PHPUnit\Framework\TestCase;
-use TestMocks\Db as MockDb;
-
-require_once __DIR__ . '/../private/RefreshTokenUtil.php';
+use Vault\RefreshTokenUtil;
 
 class RefreshTokenUtilTest extends TestCase {
     private $pdo;
 
     protected function setUp(): void {
-        class_alias(MockDb::class, 'Db');
-        
         $this->pdo = new PDO('sqlite::memory:');
         $this->pdo->exec(
             'CREATE TABLE refresh_tokens (
