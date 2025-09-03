@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../private/Db.php';
+require_once __DIR__ . '/../private/CryptoUtil.php';
+require_once __DIR__ . '/../private/JwtUtil.php';
 use Vault\Db;
 use Vault\CryptoUtil;
 use Vault\JwtUtil;
