@@ -13,7 +13,7 @@
             <directory>./tests</directory>
         </exclude>
     </source>
-    <coverage processUncoveredFiles="true">
+    <coverage>
         <report>
             <text outputFile="php://stdout"/>
             <html outputDirectory="coverage-report"/>
