@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    environment:
+      - DB_HOST=db
+      - DB_DATABASE=secrets
+      - DB_USER=user
+      - DB_PASS=pass
+      - MASTER_KEK_B64=${MASTER_KEK_B64}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    volumes:
+      - ./:/var/www/html
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: secrets
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
