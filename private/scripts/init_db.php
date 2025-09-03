@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../Db.php';
+use Vault\Db;
 
 $schemas = [];
 foreach(scandir(__DIR__ . '/../../db') as $entry){
@@ -33,11 +33,11 @@ if ($c > 0) {
     new Exception("Users already exist");
 }
 
-$password = base64_encode(randombytes(32));
+$password = base64_encode(random_bytes(32));
 $hash = password_hash($password, PASSWORD_BCRYPT);
 $ins = $pdo->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
 $ins->execute(['admin', $hash]);
-echo sprintf(
+sprintf(
     '{"User":"%s","Password":"%s"}',
     'admin',
     $password

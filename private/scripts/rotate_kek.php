@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__.'/../Db.php';
-require_once __DIR__.'/../CryptoUtil.php';
+use Vault\CryptoUtil;
+use Vault\Db;
 
 $pdo = Db::get('secretshost','secrets', 'user', 'pass');
 $sth = $pdo->prepare('SELECT id, wrapped_dek, nonce, kek_id FROM secrets');
