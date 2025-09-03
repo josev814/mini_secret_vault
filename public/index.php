@@ -19,9 +19,17 @@ function get_bearer_token() {
 
 function require_auth() {
     $token = get_bearer_token();
-    if (!$token) { http_response_code(401); echo json_encode(['error' => 'missing token']); exit; }
+    if (!$token) {
+        http_response_code(401);
+        echo json_encode(['error' => 'missing token']);
+        exit;
+    }
     $payload = JwtUtil::verify($token);
-    if (!$payload) { http_response_code(401); echo json_encode(['error' => 'invalid token']); exit; }
+    if (!$payload) {
+        http_response_code(401);
+        echo json_encode(['error' => 'invalid token']);
+        exit;
+    }
     return $payload;
 }
 
@@ -33,7 +41,11 @@ if ($method === 'POST' && $path === '/login') {
     $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ?');
     $stmt->execute([$username]);
     $user = $stmt->fetch();
-    if (!$user || !password_verify($password, $user['password_hash'])) { http_response_code(401); echo json_encode(['error' => 'invalid credentials']); exit; }
+    if (!$user || !password_verify($password, $user['password_hash'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'invalid credentials']);
+        exit;
+    }
     $token = JwtUtil::sign(['sub' => $username], 120);
     echo json_encode(['token' => $token]); exit;
 }
@@ -61,7 +73,11 @@ if ($method === 'POST' && $path === '/secret') {
     $data = json_decode(file_get_contents('php://input'), true);
     $name = $data['name'] ?? null;
     $secret = $data['secret'] ?? null;
-    if (!$name || !$secret) { http_response_code(400); echo json_encode(['error' => 'name and secret required']); exit; }
+    if (!$name || !$secret) {
+        http_response_code(400);
+        echo json_encode(['error' => 'name and secret required']);
+        exit;
+    }
 
     // get max version
     $stmt = $pdo_secrets->prepare('SELECT MAX(version) as v FROM secrets WHERE name = ?');
@@ -92,11 +108,15 @@ if ($method === 'GET' && preg_match('#^/secret/([^/]+)$#', $path, $m)) {
     $stmt = $pdo_secrets->prepare('SELECT * FROM secrets WHERE name = ? ORDER BY version DESC LIMIT 1');
     $stmt->execute([$name]);
     $row = $stmt->fetch();
-    if (!$row) { http_response_code(404); echo json_encode(['error' => 'not found']); exit; }
+    if (!$row) {
+        http_response_code(404);
+        echo json_encode(['error' => 'not found']);
+        exit;
+    }
     $aad = "$name:" . $row['version'];
     $pt = CryptoUtil::decrypt_secret(
         $row['kek_id'],
-        $row['nonce'],
+        $row['dek_nonce'],
         $row['wrapped_dek'],
         $row['nonce'],
         $row['tag'],

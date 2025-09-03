@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE refresh_tokens (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL,
-  token_hash VARCHAR(255) NOT NULL,
+  token VARCHAR(255) NOT NULL,
   expires_at DATETIME NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   replaced_by BIGINT NULL,
@@ -23,3 +23,6 @@ CREATE TABLE revoked_jtis (
   expires_at DATETIME NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX revoked_jti_uq ON revoked_tokens (jti);
+CREATE INDEX refresh_token_token_idx ON refresh_tokens (token);

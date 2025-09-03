@@ -14,7 +14,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
+          extensions: openssl, pdo_mysql, sqlite3, pdo_sqlite
       - name: Install dependencies
-        run: composer install
+        run: composer install --no-interaction --prefer-dist
       - name: Run PHPUnit
         run: vendor/bin/phpunit --configuration phpunit.xml
