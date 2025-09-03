@@ -29,23 +29,27 @@ class JwtUtil {
         return ['token' => $token, 'jti' => $jti, 'exp' => $payload['exp']];
     }
 
-    public static function verifyAccessToken(string $jwt) {
+    public static function verifyAccessToken(string $jwt, ?\PDO $pdo = null) {
         $parts = explode('.', $jwt);
         if (count($parts) !== 3) return false;
         [$h64, $b64, $s64] = $parts;
+
         $sec = getenv('JWT_SECRET') ?: 'dev-secret';
         $sig = self::base64url_decode($s64);
         $expected = hash_hmac('sha256', "$h64.$b64", $sec, true);
         if (!hash_equals($expected, $sig)) return false;
+        
         $payload = json_decode(self::base64url_decode($b64), true);
         if (!$payload) return false;
         if (($payload['iss'] ?? '') !== (getenv('APP_ISS') ?: 'mini-vault')) return false;
         if (($payload['aud'] ?? '') !== (getenv('APP_AUD') ?: 'mini-vault-clients')) return false;
         if (isset($payload['exp']) && time() > $payload['exp']) return false;
-        $pdo = Db::get('apphost','app', 'user', 'pass');
+        
+        $pdo = $pdo ?: Db::get('apphost','app', 'user', 'pass');
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM revoked_jtis WHERE jti = ?');
         $stmt->execute([$payload['jti']]);
         if ($stmt->fetchColumn() > 0) return false;
+        
         return $payload;
     }
 

@@ -1,7 +1,7 @@
 <?php
 // CryptoUtil.php - supports multiple KEKs
-class CryptoUtil {
 
+class CryptoUtil {
     // parse MASTER_KEKS_JSON or fallback to single MASTER_KEK_B64
     private static function load_master_keks(): array {
         $json = getenv('MASTER_KEKS_JSON') ?: '';
@@ -28,9 +28,7 @@ class CryptoUtil {
 
     // derive a KEK from a master key using HKDF (returns raw bytes)
     private static function derive_kek_from_master(string $masterRaw, string $info = 'wrap:v1') : string {
-        // hash_hkdf outputs hex by default; safe use with length=32 and then hex2bin
-        $hex = hash_hkdf('sha256', $masterRaw, 32, $info, '');
-        return hex2bin($hex);
+        return hash_hkdf('sha256', $masterRaw, 32, $info, '');
     }
 
     // get array map id => derived_kek_bytes
@@ -40,8 +38,7 @@ class CryptoUtil {
         $masters = self::load_master_keks();
         $cache = [];
         foreach ($masters as $id => $raw) {
-            $hex = hash_hkdf('sha256', $raw, 32, 'wrap:v1', '');
-            $cache[$id] = hex2bin($hex);
+            $cache[$id] = self::derive_kek_from_master($raw, 'wrap:v1');
         }
         return $cache;
     }
@@ -96,7 +93,7 @@ class CryptoUtil {
 
     // decrypt_secret requires $kek_id (nullable)
     public static function decrypt_secret(?string $kek_id, string $dek_nonce, string $dek_wrapped, string $nonce, string $tag, string $ciphertext, string $aad = ''): string {
-        $dek = self::unwrap_dek($kek_id, $dek_wrapped);
+        $dek = self::unwrap_dek($kek_id, $dek_nonce, $dek_wrapped);
         $pt = openssl_decrypt($ciphertext, 'aes-256-gcm', $dek, OPENSSL_RAW_DATA, $nonce, $tag, $aad);
         if ($pt === false) throw new Exception('decrypt_secret failed');
         return $pt;

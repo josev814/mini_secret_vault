@@ -1,5 +1,4 @@
 <?php
-<?php
 require_once 'Db.php';
 require_once 'CryptoUtil.php';
 require_once 'JwtUtil.php';

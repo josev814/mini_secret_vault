@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../CryptoUtil.php';
+require_once __DIR__ . '/../private/CryptoUtil.php';
 
 class CryptoUtilTest extends TestCase {
     public function testEncryptDecrypt() {
