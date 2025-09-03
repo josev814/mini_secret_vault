@@ -1,9 +1,10 @@
 <?php
+require_once __DIR__ . '/../Db.php';
 use Vault\Db;
 
 $schemas = [];
 foreach(scandir(__DIR__ . '/../../db') as $entry){
-    if (preg_match('/schema\.sql$/', $entry['name'])){
+    if (preg_match('/schema.sql$/', $entry)){
         $schemas[] = $entry;
     }
 }
@@ -16,13 +17,13 @@ $pdo_secrets = Db::get(getenv('SECRETS_DB_HOST'),getenv('SECRETS_DB'), getenv('S
 
 // create tables
 foreach($schemas as $schema){
-    $data = file_get_contents(__DIR__ . '/../../db/' . $schema['name']);
-    if (preg_match('/app_/', $schema['name'])){
-        $pdo_app->exec($schema);
-    } elseif (preg_match('/secrets_/', $schema['name'])){
-        $pdo_secrets->exec($schema);
+    $data = file_get_contents(__DIR__ . '/../../db/' . $schema);
+    if (preg_match('/app_/', $schema)){
+        $pdo_app->exec($data);
+    } elseif (preg_match('/secrets_/', $schema)){
+        $pdo_secrets->exec($data);
     } else {
-        new Exception('Unhandled Schema: ' . $schema['name']);
+        new Exception('Unhandled Schema: ' . $schema);
     }
 }
 

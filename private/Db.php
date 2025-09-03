@@ -4,7 +4,7 @@ namespace Vault;
 class Db {
     private static $pdo = null;
 
-    public static function get($host='db', $db='app',$user='user',$pass='pass'): \PDO {
+    public static function get($host='host', $db='app',$user='user',$pass='pass'): \PDO {
         if (self::$pdo) return self::$pdo;
         $host = getenv('DB_HOST') ?: $host;
         $db = getenv('DB_DATABASE') ?: $db;
