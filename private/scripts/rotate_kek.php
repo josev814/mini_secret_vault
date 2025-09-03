@@ -2,7 +2,7 @@
 use Vault\CryptoUtil;
 use Vault\Db;
 
-$pdo = Db::get('secretshost','secrets', 'user', 'pass');
+$pdo = Db::get(getenv('SECRETS_DB_HOST'),getenv('SECRETS_DB'), getenv('SECRETS_DB_USER'), getenv('SECRETS_DB_PASS'));
 $sth = $pdo->prepare('SELECT id, wrapped_dek, nonce, kek_id FROM secrets');
 $sth->execute();
 $rows = $sth->fetchAll(PDO::FETCH_ASSOC);

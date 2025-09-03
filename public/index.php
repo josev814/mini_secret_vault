@@ -7,8 +7,8 @@ use Vault\CryptoUtil;
 use Vault\JwtUtil;
 
 
-$pdo = Db::get('apphost','app', 'user', 'pass');
-$pdo_secrets = Db::get('secretshost','secrets', 'user', 'pass');
+$pdo = Db::get(getenv('USER_DB_HOST'),getenv('USER_DB'), getenv('USER_DB_USER'), getenv('USER_DB_PASS'));
+$pdo_secrets = Db::get(getenv('SECRETS_DB_HOST'),getenv('SECRETS_DB'), getenv('SECRETS_DB_USER'), getenv('SECRETS_DB_PASS'));
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 

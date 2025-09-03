@@ -47,7 +47,7 @@ class JwtUtil {
         if (($payload['aud'] ?? '') !== (getenv('APP_AUD') ?: 'mini-vault-clients')) return false;
         if (isset($payload['exp']) && time() > $payload['exp']) return false;
         
-        $pdo = $pdo ?: Db::get('apphost','app', 'user', 'pass');
+        $pdo = $pdo ?: Db::get(getenv('USER_DB_HOST'),getenv('USER_DB'), getenv('USER_DB_USER'), getenv('USER_DB_PASS'));
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM revoked_jtis WHERE jti = ?');
         $stmt->execute([$payload['jti']]);
         if ($stmt->fetchColumn() > 0) return false;
