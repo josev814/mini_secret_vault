@@ -12,14 +12,12 @@ class JwtUtilTest extends TestCase {
     }
 
     public function testGenerateAndValidate() {
-        putenv('JWT_SECRET=supersecret');
         $token = JwtUtil::sign(['user_id'=>1], 60);
         $payload = JwtUtil::verify($token);
         $this->assertEquals(1, $payload['user_id']);
     }
 
     public function testRefresh() {
-        putenv('JWT_SECRET=supersecret');
         $token = JwtUtil::sign(['user_id'=>1], 60);
         $payload = JwtUtil::verify($token);
         $this->assertEquals(1, $payload['user_id']);
@@ -30,8 +28,6 @@ class JwtUtilTest extends TestCase {
     }
 
     public function testRevokedToken() {
-        putenv('JWT_SECRET=supersecret');
-
         $res = JwtUtil::createAccessToken('user-2');
         $parts = explode('.', $res['token']);
         $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);

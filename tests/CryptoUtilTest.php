@@ -4,7 +4,6 @@ require_once __DIR__ . '/../private/CryptoUtil.php';
 
 class CryptoUtilTest extends TestCase {
     public function testEncryptDecrypt() {
-        putenv('MASTER_KEKS_JSON=[{"id":"primary","b64":"' . base64_encode(random_bytes(32)) . '"}]');
         $plaintext = "secret_data";
         [$dek_nonce, $dek_wrapped, $nonce, $tag, $ciphertext, $kek_id] = CryptoUtil::encrypt_secret($plaintext);
         $decrypted = CryptoUtil::decrypt_secret($kek_id, $dek_nonce, $dek_wrapped, $nonce, $tag, $ciphertext);
