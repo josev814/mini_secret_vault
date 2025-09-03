@@ -8,6 +8,8 @@ class RefreshTokenUtilTest extends TestCase {
     private $pdo;
 
     protected function setUp(): void {
+        class_alias(MockDb::class, 'Db');
+        
         $this->pdo = new PDO('sqlite::memory:');
         $this->pdo->exec(
             'CREATE TABLE refresh_tokens (
