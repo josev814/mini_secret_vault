@@ -21,7 +21,7 @@ class RefreshTokenUtil {
 
         $stmt = $pdo->prepare('SELECT * FROM refresh_tokens WHERE token_hash = ? LIMIT 1');
         $stmt->execute([$hash]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
     }
 

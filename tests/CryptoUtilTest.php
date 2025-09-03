@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../private/CryptoUtil.php';
+use Vault\CryptoUtil;
 
 class CryptoUtilTest extends TestCase {
     

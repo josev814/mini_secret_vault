@@ -1,4 +1,6 @@
 <?php
+namespace Vault;
+
 class Db {
     private static $pdo = null;
 
@@ -14,7 +16,7 @@ class Db {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
         ];
-        self::$pdo = new PDO($dsn, $user, $pass, $opt);
+        self::$pdo = new \PDO($dsn, $user, $pass, $opt);
         return self::$pdo;
     }
 }
