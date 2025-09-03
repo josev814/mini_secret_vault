@@ -1,5 +1,7 @@
 <?php
 use PHPUnit\Framework\TestCase;
+use TestMocks\Db as MockDb;
+
 require_once __DIR__ . '/../private/CryptoUtil.php';
 
 class CryptoUtilTest extends TestCase {

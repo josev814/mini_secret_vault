@@ -2,6 +2,8 @@
 // tests/bootstrap_coverage.php
 declare(strict_types=1);
 
+namespace TestMocks;
+
 /**
  * Override the Db class so that all PDO calls return mocks
  * during PHPUnit coverage runs. This prevents network errors.
