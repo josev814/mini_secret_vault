@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    env_file:
+      - .app_env
+    ports:
+      - "8080:80"
+    depends_on:
+      - vault_users
+      - vault_secrets
+    volumes:
+      - ./:/var/www/html
+
+  vault_users:
+    image: mysql:8.0
+    env_file:
+      - .app_db_env
+    volumes:
+      - db_data:/var/lib/mysql
+  vault_secrets:
+    image: mysql:8.0
+    env_file:
+      - .secrets_db_env
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: secrets
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+    volumes:
+      - secret_db_data:/var/lib/mysql
+
+volumes:
+  db_data:
+  secret_db_data:

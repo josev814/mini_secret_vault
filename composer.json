@@ -1,14 +1,15 @@
 {
     "require-dev": {
-        "phpunit/phpunit": "^10.0"
+        "phpunit/phpunit": "^10.5"
     },
     "autoload": {
         "psr-4": {
-            "Vault\\": "src/"
+            "Vault\\": "private/"
         }
     },
     "autoload-dev": {
         "psr-4": {
+            "TestMocks\\": "tests/mocks/",
             "Vault\\Tests\\": "tests/"
         }
     }

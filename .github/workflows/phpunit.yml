@@ -1,0 +1,38 @@
+name: PHP Unit Tests
+
+on: [ pull_request ]
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['8.1', '8.2', '8.3', '8.4']
+    
+    steps:
+      - uses: actions/checkout@v3
+    
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: openssl, pdo_mysql, sqlite3, pdo_sqlite, xdebug
+          coverage:  openssl, pdo_mysql, sqlite3, pdo_sqlite, xdebug
+      
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+      
+      - name: Run tests
+        run: |
+          # Try HTML coverage for older PHP versions, text only for 8.3+
+          if [[ "${{ matrix.php-version }}" == "8.3" || "${{ matrix.php-version }}" == "8.4" ]]; then
+            vendor/bin/phpunit --colors=always --coverage-text
+          else
+            vendor/bin/phpunit --colors=always --coverage-html coverage-report --coverage-text
+          fi
+      
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-php${{ matrix.php-version }}
+          path: coverage-report
