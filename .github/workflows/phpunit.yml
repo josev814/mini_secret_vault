@@ -26,9 +26,9 @@ jobs:
         run: |
           # Try HTML coverage for older PHP versions, text only for 8.3+
           if [[ "${{ matrix.php-version }}" == "8.3" || "${{ matrix.php-version }}" == "8.4" ]]; then
-            vendor/bin/phpunit --colors=always --coverage-text -v
+            vendor/bin/phpunit --colors=always --coverage-text
           else
-            vendor/bin/phpunit --colors=always --coverage-html coverage-report --coverage-text -v
+            vendor/bin/phpunit --colors=always --coverage-html coverage-report --coverage-text
           fi
       
       - name: Upload Coverage
