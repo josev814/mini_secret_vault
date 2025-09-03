@@ -1,21 +1,36 @@
 name: PHP Unit Tests
 
-on: [push, pull_request]
+on: 
+  push:
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  test:
+  phpunit:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         php-version: ['8.0', '8.1', '8.2', '8.3', '8.4']
+    
     steps:
       - uses: actions/checkout@v3
+    
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: openssl, pdo_mysql, sqlite3, pdo_sqlite
+          extensions: openssl, pdo_mysql, sqlite3, pdo_sqlite, xdebug
+          coverage:  openssl, pdo_mysql, sqlite3, pdo_sqlite, xdebug
+      
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit --configuration phpunit.xml
+      
+      - name: Run PHPUnit with coverage
+        run: vendor/bin/phpunit --coverage-html coverage-report --coverage-text
+      
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report-php${{ matrix.php }}
+          path: coverage-report
