@@ -22,11 +22,18 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
       
-      - name: Run PHPUnit with coverage
-        run: vendor/bin/phpunit --colors=always --coverage-html coverage-report --coverage-text
+      - name: Run tests
+        run: |
+          # Try HTML coverage for older PHP versions, text only for 8.3+
+          if [[ "${{ matrix.php-version }}" == "8.3" || "${{ matrix.php-version }}" == "8.4" ]]; then
+            vendor/bin/phpunit --colors=always --coverage-text -v
+          else
+            vendor/bin/phpunit --colors=always --coverage-html coverage-report --coverage-text -v
+          fi
       
       - name: Upload Coverage
         uses: actions/upload-artifact@v4
+        if: matrix.php-version != '8.3' && matrix.php-version != '8.4'
         with:
-          name: coverage-report-php${{ matrix.php }}
+          name: coverage-report-php${{ matrix.php-version }}
           path: coverage-report
