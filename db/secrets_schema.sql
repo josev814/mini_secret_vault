@@ -8,7 +8,9 @@ CREATE TABLE IF NOT EXISTS secrets (
     wrapped_dek VARBINARY(4096) NOT NULL,
     dek_nonce VARBINARY(255) NOT NULL,
     kek_id VARCHAR(128) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE INDEX secrets_name_version_uq (name, version),
+    INDEX secrets_name_created_idx (name, created_at DESC)
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -18,6 +20,3 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     actor VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE UNIQUE INDEX secrets_name_version_uq ON secrets (name, version);
-CREATE INDEX secrets_name_created_idx ON secrets (name, created_at DESC);

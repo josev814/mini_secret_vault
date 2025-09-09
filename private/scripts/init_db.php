@@ -1,6 +1,13 @@
 <?php
+ini_set('display_errors', '1');
+ini_set('output_buffering', '0');
+ini_set('implicit_flush', '1');
+ob_implicit_flush(true);
+
 require_once __DIR__ . '/../Db.php';
+require_once __DIR__ . '/../UserUtil.php';
 use Vault\Db;
+use Vault\UserUtil;
 
 $schemas = [];
 foreach(scandir(__DIR__ . '/../../db') as $entry){
@@ -12,7 +19,7 @@ if (empty($schemas)){
     die('Failed to retrieve schemas');
 }
 
-$pdo_app = Db::get(getenv('USER_DB_HOST'),getenv('USER_DB'), getenv('USER_DB_USER'), getenv('USER_DB_PASS'));
+$pdo_app = Db::get(getenv('APP_DB_HOST'),getenv('APP_DB'), getenv('APP_DB_USER'), getenv('APP_DB_PASS'));
 $pdo_secrets = Db::get(getenv('SECRETS_DB_HOST'),getenv('SECRETS_DB'), getenv('SECRETS_DB_USER'), getenv('SECRETS_DB_PASS'));
 
 // create tables
@@ -34,12 +41,14 @@ if ($c > 0) {
     new Exception("Users already exist");
 }
 
-$password = base64_encode(random_bytes(32));
-$hash = password_hash($password, PASSWORD_BCRYPT);
-$ins = $pdo->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
+$userutil = new UserUtil();
+$hash = $userutil->encrypt_password(NULL, true);
+$ins = $pdo_app->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
 $ins->execute(['admin', $hash]);
-sprintf(
-    '{"User":"%s","Password":"%s"}',
-    'admin',
-    $password
-);
+
+$json_data = json_encode([
+    'User' => 'admin',
+    'Default Password' => $userutil->get_password(),
+]) . PHP_EOL;
+
+echo $json_data;

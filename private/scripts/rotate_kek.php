@@ -23,7 +23,7 @@ foreach ($rows as $r) {
     $upd = $pdo->prepare('UPDATE secrets SET wrapped_dek = ?, nonce = ?, kek_id = ? WHERE id = ?');
     $upd->execute([$new_wrapped, $new_nonce, $new_kek_id, $r['id']]);
 
-    sprintf("Rewrapped secret id %s to KEK %s",
+    echo sprintf("Rewrapped secret id %s to KEK %s",
         $r['id'],
         $new_kek_id
     );
