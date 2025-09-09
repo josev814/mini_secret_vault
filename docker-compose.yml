@@ -1,34 +1,62 @@
-version: '3.8'
 services:
   app:
     build: .
     env_file:
-      - .app_env
+      - .env
     ports:
       - "8080:80"
     depends_on:
-      - vault_users
-      - vault_secrets
+      vault_app:
+        condition: service_healthy
+      vault_secrets:
+        condition: service_healthy
     volumes:
       - ./:/var/www/html
+    networks:
+      - public
+      - private
 
-  vault_users:
+  vault_app:
     image: mysql:8.0
-    env_file:
-      - .app_db_env
+    environment:
+      # Map app DB from MYSQL_* in .app_db_env
+      MYSQL_DATABASE: $APP_DB
+      MYSQL_USER: $APP_DB_USER
+      MYSQL_PASSWORD: $APP_DB_PASS
+      MYSQL_ROOT_PASSWORD: $APP_DB_ROOT
     volumes:
       - db_data:/var/lib/mysql
+      - ./db/app_schema.sql:/docker-entrypoint-initdb.d/app_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -u $$MYSQL_USER -p$$MYSQL_PASSWORD" ]
+      interval: 1s
+      timeout: 2s
+      retries: 200
+    networks:
+      - private
+  
   vault_secrets:
     image: mysql:8.0
-    env_file:
-      - .secrets_db_env
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: secrets
-      MYSQL_USER: user
-      MYSQL_PASSWORD: pass
+      # Map app DB from MYSQL_* in .secrets_db_env
+      MYSQL_DATABASE: $SECRETS_DB
+      MYSQL_USER: $SECRETS_DB_USER
+      MYSQL_PASSWORD: $SECRETS_DB_PASS
+      MYSQL_ROOT_PASSWORD: $SECRETS_DB_ROOT
     volumes:
       - secret_db_data:/var/lib/mysql
+      - ./db/secrets_schema.sql:/docker-entrypoint-initdb.d/secrets_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -u $$MYSQL_USER -p$$MYSQL_PASSWORD" ]
+      interval: 1s
+      timeout: 2s
+      retries: 200
+    networks:
+      - private
+
+networks:
+  public:
+  private:
 
 volumes:
   db_data:

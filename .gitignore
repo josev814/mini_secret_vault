@@ -1,3 +1,5 @@
 vendor
 coverage-report
 .phpunit.*
+.(app|secrets)_db_env
+.env

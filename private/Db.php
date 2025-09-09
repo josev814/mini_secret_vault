@@ -2,21 +2,39 @@
 namespace Vault;
 
 class Db {
-    private static $pdo = null;
+    private static array $connections = [];
+    private static int  $maxAttempts = 10;
+    private static int $baseDelay = 1;
 
-    public static function get($host='host', $db='app',$user='user',$pass='pass'): \PDO {
-        if (self::$pdo) return self::$pdo;
-        $host = getenv('DB_HOST') ?: $host;
-        $db = getenv('DB_DATABASE') ?: $db;
-        $user = getenv('DB_USER') ?: $user;
-        $pass = getenv('DB_PASS') ?: $pass;
+    public static function get(string $host, string $db, string $user, string $pass): \PDO {
         $dsn = "mysql:host={$host};dbname={$db};charset=utf8mb4";
-        $opt = [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-            \PDO::ATTR_EMULATE_PREPARES => false,
-        ];
-        self::$pdo = new \PDO($dsn, $user, $pass, $opt);
-        return self::$pdo;
+        if(!isset(self::$connections[$dsn])){
+            $opt = [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                \PDO::ATTR_EMULATE_PREPARES => false,
+            ];
+            $attempt = 0;
+            while ($attempt < self::$maxAttempts) {
+                try {
+                    self::$connections[$dsn] = new \PDO($dsn, $user, $pass, $opt);
+                    break; // Success, exit loop
+                } catch (\PDOException $e) {
+                    $attempt++;
+                    if ($attempt >= self::$maxAttempts) {
+                        error_log("Database connection failed after {$attempt} attempts: " . $e->getCode());
+                        throw new \RuntimeException("Database connection failed. Try again later.");
+                    }
+
+                    // Jittered delay: baseDelay ± 50%
+                    $min = max(1, (int)(self::$baseDelay * 0.5));
+                    $max = (int)(self::$baseDelay * 1.5);
+                    $jitter = rand($min, $max);
+
+                    sleep($jitter);
+                }
+            }
+        }
+        return self::$connections[$dsn];
     }
 }
