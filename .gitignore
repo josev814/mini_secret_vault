@@ -3,3 +3,5 @@ coverage-report
 .phpunit.*
 .(app|secrets)_db_env
 .env
+private/rate_limit.sqlite
+private/scripts/admin

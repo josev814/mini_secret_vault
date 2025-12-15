@@ -2,6 +2,9 @@ CREATE TABLE IF NOT EXISTS users (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  totp_secret VARCHAR(32) NULL COMMENT 'Base32-encoded TOTP secret',
+  totp_enabled TINYINT DEFAULT 0 COMMENT 'Whether TOTP is enabled for this user',
+  totp_backup_codes TEXT NULL COMMENT 'JSON array of backup codes',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   is_active TINYINT DEFAULT 1
 );
