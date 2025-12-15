@@ -39,16 +39,18 @@ $stmt = $pdo_app->query("SELECT COUNT(*) as c FROM users");
 $c = $stmt->fetch()['c'] ?? 0;
 if ($c > 0) {
     new Exception("Users already exist");
+    var_dump("User count: $c");
+} else {
+    var_dump("Seeding admin user");
+    $userutil = new UserUtil();
+    $hash = $userutil->encrypt_password(NULL, true);
+    $ins = $pdo_app->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
+    $ins->execute(['admin', $hash]);
+
+    $json_data = json_encode([
+        'User' => 'admin',
+        'Default Password' => $userutil->get_password(),
+    ]) . PHP_EOL;
+
+    echo $json_data;
 }
-
-$userutil = new UserUtil();
-$hash = $userutil->encrypt_password(NULL, true);
-$ins = $pdo_app->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
-$ins->execute(['admin', $hash]);
-
-$json_data = json_encode([
-    'User' => 'admin',
-    'Default Password' => $userutil->get_password(),
-]) . PHP_EOL;
-
-echo $json_data;

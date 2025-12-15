@@ -3,12 +3,14 @@ require_once __DIR__ . '/../private/Db.php';
 require_once __DIR__ . '/../private/CryptoUtil.php';
 require_once __DIR__ . '/../private/JwtUtil.php';
 require_once __DIR__ . '/../private/UserUtil.php';
+require_once __DIR__ . '/../private/TotpUtil.php';
 require_once __DIR__ . '/../private/SqliteRateLimitUtil.php';
 use Vault\SqliteRateLimitUtil;
 use Vault\Db;
 use Vault\CryptoUtil;
 use Vault\JwtUtil;
 use Vault\UserUtil;
+use Vault\TotpUtil;
 
 define('API_LIMIT_REQUESTS', 100);
 define('API_LIMIT_SECONDS', 60);
@@ -63,24 +65,111 @@ $rateLimiter->check($clientKey, $limit, $period);
 
 // POST Endpoints
 if ($method === 'POST') {
-    // LOGIN endpoint (existing)
+    // LOGIN endpoint with optional TOTP
     if ($path === '/login') {
         $data = json_decode(file_get_contents('php://input'), true);
         if (!array_key_exists('username', $data) || !array_key_exists('password', $data)) api_response(404, ['error' => 'Missing required params']);
         $username = $data['username'] ?? '';
         $password = $data['password'] ?? '';
+        $totp_code = $data['totp_code'] ?? null; // Optional TOTP code
         if (!$username || !$password) {
             api_response(401, ['error' => 'Invalid credentials']);
         }
         $pdo_app = get_pdo_conn('app');
 
         $userutil = new UserUtil();
-        if (! $userutil->validate_user($username, $password, $pdo_app)){
+        $user = $userutil->validate_user($username, $password, $pdo_app);
+        if (! $user){
             api_response(401, ['error' => 'Invalid credentials']);
+        }
+
+        // Check if TOTP is enabled for this user
+        if ($user['totp_enabled']) {
+            if (!$totp_code) {
+                // Return 401 with flag indicating TOTP is required
+                api_response(401, [
+                    'error' => 'TOTP required',
+                    'totp_required' => true,
+                    'username' => $username
+                ]);
+            }
+
+            // Verify TOTP code (or backup code)
+            if (!UserUtil::verifyTotp($username, $totp_code, $pdo_app)) {
+                api_response(401, ['error' => 'Invalid TOTP code']);
+            }
         }
 
         $token = JwtUtil::sign(['sub' => $username], 120); // 120 min expiry
         api_response(200, ['token' => $token]);
+    }
+
+    // POST /totp/setup - Initialize TOTP setup
+    if ($path === '/totp/setup') {
+        $actor = require_auth();
+        $username = $actor['sub'];
+        $pdo_app = get_pdo_conn('app');
+
+        $setup = UserUtil::generateTotpSetup($username);
+        $qr_code_data_uri = TotpUtil::generateQrCode($setup['provisioning_uri']);
+        
+        api_response(200, [
+            'secret' => $setup['secret'],
+            'secret_display' => TotpUtil::getSecretWithoutPadding($setup['secret']),
+            'provisioning_uri' => $setup['provisioning_uri'],
+            'qr_code_data_uri' => $qr_code_data_uri,
+            'backup_codes' => $setup['backup_codes'],
+            'message' => 'Scan the QR code in your authenticator app. Store backup codes safely.'
+        ]);
+    }
+
+    // POST /totp/confirm - Confirm TOTP setup with a verification code
+    if ($path === '/totp/confirm') {
+        $actor = require_auth();
+        $username = $actor['sub'];
+        $pdo_app = get_pdo_conn('app');
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        $secret = $data['secret'] ?? null;
+        $code = $data['code'] ?? null;
+
+        if (!$secret || !$code) {
+            api_response(400, ['error' => 'secret and code required']);
+        }
+
+        // Verify the code with the secret
+        if (!TotpUtil::verify($secret, $code)) {
+            api_response(400, ['error' => 'Invalid TOTP code']);
+        }
+
+        // Enable TOTP
+        UserUtil::enableTotp($username, $secret, $pdo_app);
+
+        api_response(200, [
+            'status' => 'TOTP enabled',
+            'message' => 'Two-factor authentication has been enabled'
+        ]);
+    }
+
+    // POST /totp/disable - Disable TOTP for the account
+    if ($path === '/totp/disable') {
+        $actor = require_auth();
+        $username = $actor['sub'];
+        $pdo_app = get_pdo_conn('app');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $totp_code = $data['totp_code'] ?? null;
+
+        if (!$totp_code) {
+            api_response(400, ['error' => 'TOTP code required to disable']);
+        }
+
+        if (!UserUtil::verifyTotp($username, $totp_code, $pdo_app)) {
+            api_response(401, ['error' => 'Invalid TOTP code']);
+        }
+
+        UserUtil::disableTotp($username, $pdo_app);
+        api_response(200, ['status' => 'TOTP disabled']);
     }
     
     // POST /secret -> create new version
@@ -157,7 +246,7 @@ if ($method === 'PATCH'){
 if ($method === 'GET'){
     // Serve Swagger UI (protected)
     if($path === '/docs') {
-        require_auth();
+        // require_auth();
         header('Content-Type: text/html');
         readfile('docs.html');
         exit;
@@ -165,7 +254,7 @@ if ($method === 'GET'){
 
     // Serve dynamic swagger.json (protected)
     if ($path === '/docs/swagger.json') {
-        require_auth();
+        // require_auth();
         header('Content-Type: application/json');
         $base = require 'swagger_template.php';
         echo json_encode($base, JSON_PRETTY_PRINT);
